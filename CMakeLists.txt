@@ -1,0 +1,177 @@
+cmake_minimum_required(VERSION 3.1)
+project(xmrig)
+
+option(WITH_HWLOC           "Enable hwloc support" ON)
+option(WITH_CN_LITE         "Enable CryptoNight-Lite algorithms family" ON)
+option(WITH_CN_HEAVY        "Enable CryptoNight-Heavy algorithms family" ON)
+option(WITH_CN_PICO         "Enable CryptoNight-Pico algorithm" ON)
+option(WITH_CN_FEMTO        "Enable CryptoNight-UPX2 algorithm" ON)
+option(WITH_RANDOMX         "Enable RandomX algorithms family" ON)
+option(WITH_ARGON2          "Enable Argon2 algorithms family" ON)
+option(WITH_ASTROBWT        "Enable AstroBWT algorithms family" ON)
+option(WITH_KAWPOW          "Enable KawPow algorithms family" ON)
+option(WITH_HTTP            "Enable HTTP protocol support (client/server)" ON)
+option(WITH_DEBUG_LOG       "Enable debug log output" OFF)
+option(WITH_TLS             "Enable OpenSSL support" ON)
+option(WITH_ASM             "Enable ASM PoW implementations" ON)
+option(WITH_MSR             "Enable MSR mod & 1st-gen Ryzen fix" ON)
+option(WITH_ENV_VARS        "Enable environment variables support in config file" ON)
+option(WITH_EMBEDDED_CONFIG "Enable internal embedded JSON config" OFF)
+option(WITH_OPENCL          "Enable OpenCL backend" ON)
+option(WITH_CUDA            "Enable CUDA backend" ON)
+option(WITH_NVML            "Enable NVML (NVIDIA Management Library) support (only if CUDA backend enabled)" ON)
+option(WITH_ADL             "Enable ADL (AMD Display Library) or sysfs support (only if OpenCL backend enabled)" ON)
+option(WITH_STRICT_CACHE    "Enable strict checks for OpenCL cache" ON)
+option(WITH_INTERLEAVE_DEBUG_LOG "Enable debug log for threads interleave" OFF)
+option(WITH_PROFILING       "Enable profiling for developers" OFF)
+option(WITH_SSE4_1          "Enable SSE 4.1 for Blake2" ON)
+option(WITH_BENCHMARK       "Enable builtin RandomX benchmark and stress test" ON)
+option(WITH_SECURE_JIT      "Enable secure access to JIT memory" OFF)
+option(WITH_DMI             "Enable DMI/SMBIOS reader" ON)
+
+option(BUILD_STATIC         "Build static binary" OFF)
+option(ARM_TARGET           "Force use specific ARM target 8 or 7" 0)
+option(HWLOC_DEBUG          "Enable hwloc debug helpers and log" OFF)
+
+add_definitions(-DXMRIG_MINER_PROJECT)
+
+set(WITH_SODIUM     OFF)
+set(WITH_CRYPTONOTE ON)
+set(WITH_CRYPTO_OPS ON)
+
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/src/base/cmake" "${CMAKE_SOURCE_DIR}/cmake")
+set(LIBS base)
+
+include(base)
+add_subdirectory(src/base)
+
+include(src/backend/backend.cmake)
+
+
+set(HEADERS
+    "${HEADERS_BACKEND}"
+    src/backend/common/interfaces/IMemoryPool.h
+    src/core/config/Config_default.h
+    src/core/config/Config_platform.h
+    src/core/config/Config.h
+    src/core/config/ConfigTransform.h
+    src/core/config/usage.h
+    src/core/Controller.h
+    src/core/Miner.h
+    src/crypto/cn/asm/CryptonightR_template.h
+    src/crypto/cn/c_blake256.h
+    src/crypto/cn/c_groestl.h
+    src/crypto/cn/c_jh.h
+    src/crypto/cn/c_skein.h
+    src/crypto/cn/CnAlgo.h
+    src/crypto/cn/CnCtx.h
+    src/crypto/cn/CnHash.h
+    src/crypto/cn/CryptoNight_monero.h
+    src/crypto/cn/CryptoNight_test.h
+    src/crypto/cn/CryptoNight.h
+    src/crypto/cn/groestl_tables.h
+    src/crypto/cn/hash.h
+    src/crypto/cn/skein_port.h
+    src/crypto/cn/soft_aes.h
+    src/crypto/common/HugePagesInfo.h
+    src/crypto/common/MemoryPool.h
+    src/crypto/common/Nonce.h
+    src/crypto/common/portable/mm_malloc.h
+    src/crypto/common/VirtualMemory.h
+    src/MinerApp.h
+    src/net/interfaces/IJobResultListener.h
+    src/net/JobResult.h
+    src/net/JobResults.h
+    src/net/Network.h
+    src/net/strategies/DonateStrategy.h
+    src/Summary.h
+    src/version.h
+   )
+
+if (XMRIG_ARM)
+    list(APPEND HEADERS src/crypto/cn/CryptoNight_arm.h)
+else()
+    list(APPEND HEADERS src/crypto/cn/CryptoNight_x86.h)
+endif()
+
+set(SOURCES
+    "${SOURCES_BACKEND}"
+    src/core/config/Config.cpp
+    src/core/config/ConfigTransform.cpp
+    src/core/Controller.cpp
+    src/core/Miner.cpp
+    src/crypto/cn/c_blake256.c
+    src/crypto/cn/c_groestl.c
+    src/crypto/cn/c_jh.c
+    src/crypto/cn/c_skein.c
+    src/crypto/cn/CnCtx.cpp
+    src/crypto/cn/CnHash.cpp
+    src/crypto/common/HugePagesInfo.cpp
+    src/crypto/common/MemoryPool.cpp
+    src/crypto/common/Nonce.cpp
+    src/crypto/common/VirtualMemory.cpp
+    src/MinerApp.cpp
+    src/net/JobResults.cpp
+    src/net/Network.cpp
+    src/net/strategies/DonateStrategy.cpp
+    src/Summary.cpp
+    src/xmrig.cpp
+   )
+
+if (WITH_HWLOC)
+    list(APPEND HEADERS
+        src/crypto/common/NUMAMemoryPool.h
+        )
+
+    list(APPEND SOURCES
+        src/crypto/common/NUMAMemoryPool.cpp
+        src/crypto/common/VirtualMemory_hwloc.cpp
+        )
+endif()
+
+if (XMRIG_OS_WIN)
+    list(APPEND SOURCES
+        res/app.rc
+        src/crypto/common/VirtualMemory_win.cpp
+        )
+else()
+    list(APPEND SOURCES src/crypto/common/VirtualMemory_unix.cpp)
+
+    if (XMRIG_OS_LINUX AND NOT XMRIG_OS_ANDROID)
+        list(APPEND SOURCES
+            src/crypto/common/LinuxMemory.h
+            src/crypto/common/LinuxMemory.cpp
+            )
+    endif()
+endif()
+
+include_directories(src)
+include_directories(src/3rdparty)
+
+include(randomx)
+include(argon2)
+include(astrobwt)
+include(kawpow)
+include(asm)
+
+if (WITH_EMBEDDED_CONFIG)
+    add_definitions(-DXMRIG_FEATURE_EMBEDDED_CONFIG)
+endif()
+
+include(src/hw/api/api.cmake)
+include(src/hw/dmi/dmi.cmake)
+
+add_executable(${CMAKE_PROJECT_NAME} ${HEADERS} ${SOURCES})
+target_link_libraries(${CMAKE_PROJECT_NAME} ${LIBS})
+
+if (WIN32)
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/bin/WinRing0/WinRing0x64.sys" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/benchmark_1M.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/benchmark_10M.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/pool_mine_example.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
+    add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/scripts/solo_mine_example.cmd" $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>)
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES Clang AND CMAKE_BUILD_TYPE STREQUAL Release AND NOT CMAKE_GENERATOR STREQUAL Xcode)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${CMAKE_PROJECT_NAME})
+endif()
