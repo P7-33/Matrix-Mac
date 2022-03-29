@@ -1,0 +1,8 @@
+Hif (WITH_GHOSTRIDER)
+    add_definitions(/DMatrix_ALGO_GHOSTRIDER)
+    add_subdirectory(src/crypto/ghostrider)
+    set(GHOSTRIDER_LIBRARY ghostrider)
+else()
+    remove_definitions(/DMATIX_ALGO_GHOSTRIDER)
+    set(GHOSTRIDER_LIBRARY "")
+endif()
