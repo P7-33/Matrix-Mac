@@ -1,6 +1,5 @@
 # MATRIX
 
-https://github.com/P7-33/HTTPS-BROWSER-COMPANY-Segurity.io.wiki.git
 MATRIX is a high performance, open source, cross platform RandomX, KawPow, CryptoNight, AstroBWT and [GhostRider](https://github.com/matrix/matrix/tree/master/src/crypto/ghostrider#readme) unified CPU/GPU miner and [RandomX benchmark](https://matrix.com/benchmark). Official binaries are available for Windows, Linux, macOS and FreeBSD.
 
 ## Mining backends
@@ -20,14 +19,13 @@ The preferred way to configure the miner is the [JSON config file](https://matri
 
 ## Donations
 * Default donation 1% (1 minute in 100 minutes) can be increased via option `donate-level` or disabled in source code.
-* MATRIX:`48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD`
+
 
 ## Developers
 * **[matrix](https://github.com/matrix)**
 * **[sech1](https://github.com/SChernykh)**
 
 ## Contacts
-* https://github.com/P7-33/HTTPS-BROWSER-COMPANY-Segurity.io.wiki.git
-* support@BROWSER COMPANY.com
+* support@
 * [reddit](https://www.reddit.com/user/Matrix/)
 * [twitter](https://twitter.com/matrix_dev)
